@@ -1,0 +1,8 @@
+{
+  "name": "Academia Pro LMS",
+  "description": "A world-class Learning Management System with instructor dashboards, course management, student catalogs, and content player screens.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

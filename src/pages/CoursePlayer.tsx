@@ -72,7 +72,7 @@ export default function CoursePlayer() {
                                     <Info className="w-4 h-4 mr-2" /> Información
                                 </button>
                                 <button className="flex items-center text-[10px] font-black uppercase tracking-widest text-gray-500 pb-2 hover:text-white transition-colors">
-                                    <list className="w-4 h-4 mr-2" /> Recursos
+                                    <List className="w-4 h-4 mr-2" /> Recursos
                                 </button>
                             </div>
 
@@ -97,8 +97,8 @@ export default function CoursePlayer() {
                                     key={lesson.id}
                                     onClick={() => setActiveLessonId(lesson.id)}
                                     className={`w-full text-left p-4 rounded-xl transition-all flex items-center space-x-4 border-l-4 ${(activeLessonId || course.lessons[0]?.id) === lesson.id
-                                            ? 'bg-primary/10 border-primary text-primary'
-                                            : 'hover:bg-white/5 border-transparent text-gray-400'
+                                        ? 'bg-primary/10 border-primary text-primary'
+                                        : 'hover:bg-white/5 border-transparent text-gray-400'
                                         }`}
                                 >
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black ${(activeLessonId || course.lessons[0]?.id) === lesson.id ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white/5'

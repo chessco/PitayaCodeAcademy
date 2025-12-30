@@ -11,6 +11,7 @@ import CourseDetail from './pages/CourseDetail';
 import CoursePlayer from './pages/CoursePlayer';
 import Studio from './pages/Studio';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 // Wrapper for protected pages
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => {
@@ -33,6 +34,7 @@ const App = () => {
                 <AuthProvider>
                     <Routes>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
                         <Route path="/" element={<MainLayout><Catalog /></MainLayout>} />
                         <Route path="/courses/:id" element={<MainLayout><CourseDetail /></MainLayout>} />
 

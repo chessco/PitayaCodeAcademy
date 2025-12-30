@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// --- TENANCY ---
+
+model Tenant {
+  id        String             @id @default(uuid())
+  slug      String             @unique // Subdomain
+  name      String
+  users     TenantMembership[]
+  courses   Course[]
+  coupons   Coupon[]
+  orders    Order[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+// --- USERS & ROLES ---
+
+model User {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  globalRole   GlobalRole         @default(USER) // SUPERADMIN vs USER
+  memberships  TenantMembership[]
+  createdAt    DateTime           @default(now())
+}
+
+model TenantMembership {
+  id       String     @id @default(uuid())
+  userId   String
+  tenantId String
+  role     TenantRole // ADMIN, INSTRUCTOR, STUDENT
+  user     User       @relation(fields: [userId], references: [id])
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+
+  instructorCourses Course[]     @relation("CourseInstructor")
+  enrollments       Enrollment[]
+  orders            Order[]
+
+  @@unique([userId, tenantId])
+}
+
+enum GlobalRole {
+  SUPERADMIN
+  USER
+}
+
+enum TenantRole {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+// --- LMS CORE ---
+
+model Course {
+  id           String  @id @default(uuid())
+  tenantId     String
+  instructorId String
+  title        String
+  slug         String
+  description  String? @db.Text
+  price        Decimal @db.Decimal(10, 2)
+  isPublished  Boolean @default(false)
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id]) // Virtual relation helper if needed, but tenantId is real
+  instructor TenantMembership @relation("CourseInstructor", fields: [instructorId], references: [id])
+  lessons    Lesson[]
+
+  coupons     Coupon[]     @relation("CouponCourses")
+  enrollments Enrollment[]
+  orderItems  OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+}
+
+model Lesson {
+  id          String  @id @default(uuid())
+  courseId    String
+  title       String
+  content     String? @db.Text // JSON or HTML
+  videoUrl    String?
+  sortOrder   Int
+  isPublished Boolean @default(true)
+
+  course Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enrollment {
+  id         String     @id @default(uuid())
+  courseId   String
+  studentId  String
+  accessType AccessType @default(LIFETIME)
+
+  course  Course           @relation(fields: [courseId], references: [id])
+  student TenantMembership @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, studentId])
+}
+
+enum AccessType {
+  LIFETIME
+  SUBSCRIPTION
+}
+
+// --- E-COMMERCE ---
+
+model Coupon {
+  id            String       @id @default(uuid())
+  tenantId      String
+  code          String
+  discountType  DiscountType
+  discountValue Decimal
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  expiresAt     DateTime?
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  courses Course[] @relation("CouponCourses")
+
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, code])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  tenantId        String
+  studentId       String
+  status          OrderStatus @default(PENDING)
+  totalAmount     Decimal
+  stripeSessionId String?
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
+  student TenantMembership @relation(fields: [studentId], references: [id])
+  items   OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id       String  @id @default(uuid())
+  orderId  String
+  courseId String
+  price    Decimal
+
+  order  Order  @relation(fields: [orderId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}

@@ -14,7 +14,7 @@ async function main() {
         where: { slug: 'demo' },
         update: {},
         create: {
-            name: 'Demo Academy',
+            name: 'PitayaCode | Academy',
             slug: 'demo',
         },
     });

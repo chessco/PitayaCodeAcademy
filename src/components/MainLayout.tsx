@@ -24,7 +24,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
             {/* Sidebar */}
             <aside className="w-64 border-r border-white/10 flex flex-col p-4 bg-card/50 backdrop-blur-xl sticky top-0 h-screen">
                 <div className="mb-8 p-4">
-                    <h1 className="text-xl font-bold gradient-text uppercase tracking-widest">{tenantId || 'Academy'}</h1>
+                    <h1 className="text-xl font-bold gradient-text uppercase tracking-widest text-nowrap">PitayaCode | Academy</h1>
                     <p className="text-xs text-secondary-foreground/50 opacity-50">Enterprise LMS</p>
                 </div>
 
@@ -34,8 +34,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                             key={item.path}
                             to={item.path}
                             className={`flex items-center space-x-3 p-3 rounded-lg transition-all ${location.pathname === item.path
-                                    ? 'bg-primary/20 text-primary border-l-2 border-primary'
-                                    : 'hover:bg-white/5 text-secondary-foreground/60'
+                                ? 'bg-primary/20 text-primary border-l-2 border-primary'
+                                : 'hover:bg-white/5 text-secondary-foreground/60'
                                 }`}
                         >
                             <item.icon className="w-5 h-5" />

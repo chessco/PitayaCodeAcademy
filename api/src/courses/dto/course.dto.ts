@@ -1,4 +1,4 @@
-import { IsString, IsDecimal, IsBoolean, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsDecimal, IsBoolean, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateCourseDto {
     @IsString()
@@ -13,8 +13,20 @@ export class CreateCourseDto {
     @IsOptional()
     description?: string;
 
-    @IsDecimal()
+    @IsNumber()
     price: number;
+
+    @IsString()
+    @IsOptional()
+    category?: string;
+
+    @IsString()
+    @IsOptional()
+    level?: string;
+
+    @IsString()
+    @IsOptional()
+    thumbnail?: string;
 }
 
 export class UpdateCourseDto {
@@ -26,11 +38,23 @@ export class UpdateCourseDto {
     @IsOptional()
     description?: string;
 
-    @IsDecimal()
+    @IsNumber()
     @IsOptional()
     price?: number;
 
     @IsBoolean()
     @IsOptional()
     isPublished?: boolean;
+
+    @IsString()
+    @IsOptional()
+    category?: string;
+
+    @IsString()
+    @IsOptional()
+    level?: string;
+
+    @IsString()
+    @IsOptional()
+    thumbnail?: string;
 }

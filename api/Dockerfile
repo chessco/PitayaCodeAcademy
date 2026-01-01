@@ -1,6 +1,9 @@
 # Build stage
 FROM node:18-alpine AS build
 
+# Install build dependencies for bcrypt and other native modules
+RUN apk add --no-cache python3 make g++ openssl
+
 WORKDIR /usr/src/app
 
 COPY package*.json ./
@@ -12,6 +15,9 @@ RUN npm run build
 
 # Production stage
 FROM node:18-alpine
+
+# Install openssl for prisma engine
+RUN apk add --no-cache openssl
 
 WORKDIR /usr/src/app
 

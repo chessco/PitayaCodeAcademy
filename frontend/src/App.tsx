@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import { MainLayout } from './components/MainLayout';
 import './styles/globals.css';
 
@@ -11,7 +12,22 @@ import CourseDetail from './pages/CourseDetail';
 import CoursePlayer from './pages/CoursePlayer';
 import Studio from './pages/Studio';
 import Login from './pages/Login';
+import MyCourses from './pages/MyCourses';
 import Signup from './pages/Signup';
+import Cart from './pages/Cart';
+import CourseEditor from './pages/CourseEditor';
+import Coupons from './pages/Coupons';
+import Settings from './pages/Settings';
+import Users from './pages/Users';
+import Analytics from './pages/Analytics';
+import Messages from './pages/Messages';
+import StudentDashboard from './pages/StudentDashboard';
+import CourseReview from './pages/CourseReview';
+import CourseForum from './pages/CourseForum';
+import TopicDetail from './pages/TopicDetail';
+import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
+import Community from './pages/Community';
 
 // Wrapper for protected pages
 const ProtectedPage = ({ children }: { children: React.ReactNode }) => {
@@ -25,42 +41,116 @@ const ProtectedPage = ({ children }: { children: React.ReactNode }) => {
     return <MainLayout>{children}</MainLayout>;
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: true,
+            refetchOnMount: true,
+            refetchOnReconnect: true,
+            staleTime: 0,
+        },
+    },
+});
 
 const App = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <Router>
                 <AuthProvider>
-                    <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/" element={<MainLayout><Catalog /></MainLayout>} />
-                        <Route path="/courses/:id" element={<MainLayout><CourseDetail /></MainLayout>} />
+                    <CartProvider>
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<Signup />} />
+                            <Route path="/" element={<MainLayout><Catalog /></MainLayout>} />
+                            <Route path="/courses/:id" element={<MainLayout><CourseDetail /></MainLayout>} />
 
-                        {/* Protected Routes */}
-                        <Route path="/courses/:id/player" element={
-                            <ProtectedPage>
-                                <CoursePlayer />
-                            </ProtectedPage>
-                        } />
-                        <Route path="/my-courses" element={
-                            <ProtectedPage>
-                                <div className="py-20 text-center glass rounded-3xl">
-                                    <h2 className="text-3xl font-black mb-2">Mis Aprendizajes</h2>
-                                    <p className="text-gray-500">Aquí verás los cursos en los que estás inscrito.</p>
-                                </div>
-                            </ProtectedPage>
-                        } />
-                        <Route path="/studio" element={
-                            <ProtectedPage>
-                                <Studio />
-                            </ProtectedPage>
-                        } />
+                            {/* Protected Routes */}
+                            <Route path="/courses/:id/player" element={
+                                <ProtectedPage>
+                                    <CoursePlayer />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/dashboard" element={
+                                <ProtectedPage>
+                                    <StudentDashboard />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/my-courses/:courseId/review" element={
+                                <ProtectedPage>
+                                    <CourseReview />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/community" element={
+                                <ProtectedPage>
+                                    <Community />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/courses/:id/forum" element={
+                                <ProtectedPage>
+                                    <CourseForum />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/courses/forum" element={<Navigate to="/community" replace />} />
+                            <Route path="/courses/:id/forum/:topicId" element={
+                                <ProtectedPage>
+                                    <TopicDetail />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/my-courses" element={
+                                <ProtectedPage>
+                                    <MyCourses />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio" element={
+                                <ProtectedPage>
+                                    <Studio />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/courses/:id" element={
+                                <ProtectedPage>
+                                    <CourseEditor />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/coupons" element={
+                                <ProtectedPage>
+                                    <Coupons />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/settings" element={
+                                <ProtectedPage>
+                                    <Settings />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/users" element={
+                                <ProtectedPage>
+                                    <Users />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/analytics" element={
+                                <ProtectedPage>
+                                    <Analytics />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/messages" element={
+                                <ProtectedPage>
+                                    <Messages />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/notifications" element={
+                                <ProtectedPage>
+                                    <Notifications />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/profile" element={
+                                <ProtectedPage>
+                                    <Profile />
+                                </ProtectedPage>
+                            } />
 
-                        {/* Fallback */}
-                        <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
+                            {/* Fallback */}
+                            <Route path="*" element={<Navigate to="/" />} />
+                        </Routes>
+                    </CartProvider>
                 </AuthProvider>
             </Router>
         </QueryClientProvider>

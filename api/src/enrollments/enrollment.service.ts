@@ -31,9 +31,13 @@ export class EnrollmentService {
             include: {
                 course: {
                     select: {
+                        id: true,
                         title: true,
                         slug: true,
-                        instructor: { include: { user: { select: { email: true } } } },
+                        thumbnail: true,
+                        level: true,
+                        description: true,
+                        instructor: { include: { user: { select: { email: true, name: true } } } },
                     },
                 },
             },

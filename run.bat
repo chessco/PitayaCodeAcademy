@@ -1,0 +1,3 @@
+@echo off
+echo Starting PitayaCode Academy...
+npm run dev

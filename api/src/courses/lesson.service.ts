@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateLessonDto, UpdateLessonDto } from './dto/lesson.dto';
+import { CreateLessonDto, UpdateLessonDto, CreateLessonResourceDto } from './dto/lesson.dto';
 
 @Injectable()
 export class LessonService {
@@ -44,5 +44,20 @@ export class LessonService {
                 }),
             ),
         );
+    }
+
+    async addResource(lessonId: string, data: CreateLessonResourceDto) {
+        return this.prisma.lessonResource.create({
+            data: {
+                ...data,
+                lessonId,
+            },
+        });
+    }
+
+    async removeResource(id: string) {
+        return this.prisma.lessonResource.delete({
+            where: { id },
+        });
     }
 }

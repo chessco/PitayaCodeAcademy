@@ -6,7 +6,12 @@ import { CommonModule } from './common/common.module';
 import { CourseModule } from './courses/course.module';
 import { EnrollmentModule } from './enrollments/enrollment.module';
 import { CartModule } from './cart/cart.module';
+import { CouponModule } from './coupons/coupon.module';
 import { TenantMiddleware } from './common/tenant/tenant.middleware';
+import { TenantModule } from './tenants/tenant.module';
+import { ReviewModule } from './courses/reviews/review.module';
+import { DiscussionsModule } from './discussions/discussions.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -16,7 +21,12 @@ import { TenantMiddleware } from './common/tenant/tenant.middleware';
     UsersModule,
     CourseModule,
     EnrollmentModule,
-    CartModule
+    CartModule,
+    CouponModule,
+    TenantModule,
+    ReviewModule,
+    DiscussionsModule,
+    NotificationsModule
   ],
   controllers: [],
   providers: [],

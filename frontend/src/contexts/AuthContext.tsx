@@ -27,13 +27,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const token = localStorage.getItem('token');
             if (token) {
                 try {
-                    // We could have a /auth/me endpoint, but for now we'll trust the stored user if it exists
-                    const storedUser = localStorage.getItem('user');
-                    if (storedUser) {
-                        setUser(JSON.parse(storedUser));
-                    }
+                    // Fetch fresh user data from API
+                    const res = await api.get('/auth/me');
+                    const userData = res.data;
+                    setUser(userData);
+                    localStorage.setItem('user', JSON.stringify(userData));
                 } catch (e) {
-                    logout();
+                    console.error('Failed to refresh user session', e);
+                    // If 401, token is invalid
+                    if ((e as any).response?.status === 401) {
+                        logout();
+                    } else {
+                        // Fallback to stored user if network error, but better to be safe
+                        const storedUser = localStorage.getItem('user');
+                        if (storedUser) {
+                            setUser(JSON.parse(storedUser));
+                        }
+                    }
                 }
             }
             setLoading(false);

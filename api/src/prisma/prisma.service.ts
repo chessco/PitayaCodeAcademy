@@ -13,14 +13,23 @@ export class PrismaService implements OnModuleInit {
                 $allModels: {
                     async $allOperations({ model, operation, args, query }: any) {
                         const tenantIsolatedModels = [
-                            'Course', 'Lesson', 'Enrollment', 'Coupon', 'Order', 'TenantMembership'
+                            'Course', 'Coupon', 'Order', 'TenantMembership', 'Module', 'Review', 'Notification', 'DiscussionTopic', 'DiscussionPost'
                         ];
 
                         if (tenantIsolatedModels.includes(model)) {
                             const tenantId = new TenantContext().tenantId;
 
                             if (tenantId) {
-                                args.where = { ...args.where, tenantId };
+                                // Only add tenantId filter to operations that support non-unique where clauses
+                                // This prevents breaking findUnique, update, delete, upsert which require unique identifiers
+                                const supportsTenantFilter = [
+                                    'findMany', 'findFirst', 'findFirstOrThrow', 'count',
+                                    'aggregate', 'groupBy', 'updateMany', 'deleteMany'
+                                ].includes(operation);
+
+                                if (supportsTenantFilter) {
+                                    args.where = { ...args.where, tenantId };
+                                }
 
                                 if (operation === 'create' || operation === 'createMany') {
                                     if (Array.isArray(args.data)) {
@@ -53,7 +62,14 @@ export class PrismaService implements OnModuleInit {
     get tenantMembership() { return this._client.tenantMembership; }
     get course() { return this._client.course; }
     get lesson() { return this._client.lesson; }
+    get lessonResource() { return this._client.lessonResource; }
     get enrollment() { return this._client.enrollment; }
     get order() { return this._client.order; }
     get coupon() { return this._client.coupon; }
+    get module() { return this._client.module; }
+    get review() { return this._client.review; }
+    get discussionTopic() { return this._client.discussionTopic; }
+    get discussionPost() { return this._client.discussionPost; }
+    get notification() { return this._client.notification; }
+    get $transaction() { return this._client.$transaction; }
 }

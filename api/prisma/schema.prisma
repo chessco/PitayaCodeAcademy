@@ -10,13 +10,17 @@ datasource db {
 // --- TENANCY ---
 
 model Tenant {
-  id        String             @id @default(uuid())
-  slug      String             @unique // Subdomain
-  name      String
-  users     TenantMembership[]
-  courses   Course[]
-  coupons   Coupon[]
+  id          String             @id @default(uuid())
+  slug        String             @unique // Subdomain
+  name        String
+  accentColor String?            @default("#3b82f6")
+  logoUrl     String?
+  users       TenantMembership[]
+  courses     Course[]
+  coupons     Coupon[]
   orders    Order[]
+  reviews   Review[]
+  notifications Notification[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 }
@@ -26,6 +30,7 @@ model Tenant {
 model User {
   id           String             @id @default(uuid())
   email        String             @unique
+  name         String?
   passwordHash String
   globalRole   GlobalRole         @default(USER) // SUPERADMIN vs USER
   memberships  TenantMembership[]
@@ -37,12 +42,34 @@ model TenantMembership {
   userId   String
   tenantId String
   role     TenantRole // ADMIN, INSTRUCTOR, STUDENT
+  
+  // Profile Fields
+  bio         String?   @db.Text
+  avatarUrl   String?
+  jobTitle    String?   @default("Estudiante")
+  socialGithub   String?
+  socialLinkedin String?
+  socialTwitter  String?
+  interests      String?   @db.Text // JSON list of strings
+  
+  // Gamification
+  xp    Int @default(0)
+  level Int @default(1)
+  
+  // Verification
+  isEmailConfirmed   Boolean @default(false)
+  isIdentityVerified Boolean @default(false)
+
   user     User       @relation(fields: [userId], references: [id])
   tenant   Tenant     @relation(fields: [tenantId], references: [id])
 
   instructorCourses Course[]     @relation("CourseInstructor")
   enrollments       Enrollment[]
   orders            Order[]
+  reviews           Review[]
+  discussions       DiscussionTopic[]
+  discussionPosts   DiscussionPost[]
+  notifications     Notification[]
 
   @@unique([userId, tenantId])
 }
@@ -68,15 +95,21 @@ model Course {
   slug         String
   description  String? @db.Text
   price        Decimal @db.Decimal(10, 2)
+  category     String?
+  level        String?
+  thumbnail    String?
   isPublished  Boolean @default(false)
 
   tenant     Tenant           @relation(fields: [tenantId], references: [id]) // Virtual relation helper if needed, but tenantId is real
   instructor TenantMembership @relation("CourseInstructor", fields: [instructorId], references: [id])
+  modules    Module[]
   lessons    Lesson[]
 
-  coupons     Coupon[]     @relation("CouponCourses")
-  enrollments Enrollment[]
-  orderItems  OrderItem[]
+  coupons      Coupon[]     @relation("CouponCourses")
+  enrollments  Enrollment[]
+  orderItems   OrderItem[]
+  reviews      Review[]
+  discussions DiscussionTopic[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -92,9 +125,37 @@ model Lesson {
   videoUrl    String?
   sortOrder   Int
   isPublished Boolean @default(true)
+  moduleId    String?
 
-  course Course @relation(fields: [courseId], references: [id])
+  course Course  @relation(fields: [courseId], references: [id])
+  module Module? @relation(fields: [moduleId], references: [id])
 
+  resources LessonResource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LessonResource {
+  id        String   @id @default(uuid())
+  lessonId  String
+  title     String
+  url       String
+  fileSize  String?
+  fileType  String?
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Module {
+  id        String   @id @default(uuid())
+  courseId  String
+  tenantId  String
+  title     String
+  sortOrder Int
+  course    Course   @relation(fields: [courseId], references: [id])
+  lessons   Lesson[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -128,6 +189,7 @@ model Coupon {
   discountValue Decimal
   maxUses       Int?
   usedCount     Int          @default(0)
+  startsAt      DateTime?
   expiresAt     DateTime?
 
   tenant  Tenant   @relation(fields: [tenantId], references: [id])
@@ -169,9 +231,99 @@ model OrderItem {
   course Course @relation(fields: [courseId], references: [id])
 }
 
+model Review {
+  id          String   @id @default(uuid())
+  tenantId    String
+  courseId    String
+  studentId   String
+  rating      Int
+  comment     String?  @db.Text
+  pros        String?  @db.Text // Comma separated tags
+  contras     String?  @db.Text // Comma separated tags
+  
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  course      Course           @relation(fields: [courseId], references: [id])
+  student     TenantMembership @relation(fields: [studentId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courseId, studentId])
+}
+
+// --- DISCUSSIONS ---
+
+model DiscussionTopic {
+  id         String             @id @default(uuid())
+  courseId   String
+  authorId   String
+  title      String
+  content    String             @db.Text
+  category   DiscussionCategory @default(GENERAL)
+  isPinned   Boolean            @default(false)
+  isResolved Boolean            @default(false)
+  views      Int                @default(0)
+
+  course Course           @relation(fields: [courseId], references: [id])
+  author TenantMembership @relation(fields: [authorId], references: [id])
+  posts  DiscussionPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiscussionPost {
+  id      String @id @default(uuid())
+  topicId String
+  authorId String
+  content String @db.Text
+
+  topic  DiscussionTopic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author TenantMembership @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DiscussionCategory {
+  ANNOUNCEMENT
+  QUESTION
+  PROPOSAL
+  GENERAL
+}
+
+// --- NOTIFICATIONS ---
+
+model Notification {
+  id          String           @id @default(uuid())
+  tenantId    String
+  studentId   String
+  type        NotificationType @default(SYSTEM)
+  title       String
+  content     String           @db.Text
+  link        String?
+  isRead      Boolean          @default(false)
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
+  student TenantMembership @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum NotificationType {
+  COURSE
+  FORUM
+  SYSTEM
+  ACHIEVEMENT
+  PROMOTION
+}
+
 enum OrderStatus {
   PENDING
   PAID
   FAILED
   REFUNDED
 }
+
+

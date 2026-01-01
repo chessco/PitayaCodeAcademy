@@ -1,33 +1,47 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { TenantContext } from './tenant.context';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-    use(req: Request, res: Response, next: NextFunction) {
-        // 1. Resolve tenantId
-        // In production, we'd use req.hostname. For development, we allow a header.
-        let tenantId = req.headers['x-tenant-id'] as string;
+    constructor(private prisma: PrismaService) { }
 
-        if (!tenantId) {
-            // Example: tenant1.academia.com -> tenant1
+    async use(req: Request, res: Response, next: NextFunction) {
+        // 1. Resolve tenant identifier (slug or UUID)
+        let tenantIdentifier = req.headers['x-tenant-id'] as string;
+
+        if (!tenantIdentifier) {
             const host = req.hostname;
             const parts = host.split('.');
             if (parts.length >= 3) {
-                tenantId = parts[0];
+                tenantIdentifier = parts[0];
             }
         }
 
-        // 2. Validate tenantId (In a real app, query DB here or use a cache)
-        // For now, we assume if it exists, it's valid for testing
-        if (!tenantId) {
-            // If no tenant is resolved, we might allow the request (e.g. for landing page) 
-            // or block it. For enterprise LMS, we usually require it.
-            // For now, continue but context will be empty.
+        if (!tenantIdentifier) {
+            console.warn('[TenantMiddleware] No tenant identifier found');
+            return next();
+        }
+
+        console.log(`[TenantMiddleware] Resolving tenant for: ${tenantIdentifier}`);
+
+        // 2. Resolve Tenant
+        let tenant;
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantIdentifier);
+
+        if (isUuid) {
+            tenant = await this.prisma.tenant.findUnique({ where: { id: tenantIdentifier } });
+        } else {
+            tenant = await this.prisma.tenant.findUnique({ where: { slug: tenantIdentifier } });
+        }
+
+        if (!tenant) {
+            console.warn(`[TenantMiddleware] Tenant not found for identifier: ${tenantIdentifier}`);
             return next();
         }
 
         // 3. Run the remainder of the request within the context
-        TenantContext.run(tenantId, () => next());
+        TenantContext.run(tenant.id, () => next());
     }
 }

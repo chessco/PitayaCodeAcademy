@@ -5,7 +5,7 @@ import { RbacGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantRole } from '@prisma/client';
 import { LessonService } from './lesson.service';
-import { CreateLessonDto, UpdateLessonDto, ReorderLessonsDto } from './dto/lesson.dto';
+import { CreateLessonDto, UpdateLessonDto, ReorderLessonsDto, CreateLessonResourceDto } from './dto/lesson.dto';
 
 @Controller('courses/:courseId/lessons')
 @UseGuards(JwtAuthGuard, TenantGuard)
@@ -43,5 +43,19 @@ export class LessonController {
     @Roles(TenantRole.ADMIN, TenantRole.INSTRUCTOR)
     async delete(@Param('id') id: string) {
         return this.lessonService.delete(id);
+    }
+
+    @Post(':id/resources')
+    @UseGuards(RbacGuard)
+    @Roles(TenantRole.ADMIN, TenantRole.INSTRUCTOR)
+    async addResource(@Param('id') id: string, @Body() body: CreateLessonResourceDto) {
+        return this.lessonService.addResource(id, body);
+    }
+
+    @Delete(':lessonId/resources/:id')
+    @UseGuards(RbacGuard)
+    @Roles(TenantRole.ADMIN, TenantRole.INSTRUCTOR)
+    async removeResource(@Param('id') id: string) {
+        return this.lessonService.removeResource(id);
     }
 }

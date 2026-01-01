@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
 });
 
 // Interceptor to add Tenant ID
@@ -13,9 +13,8 @@ api.interceptors.request.use((config) => {
     // In dev (localhost), we might want to use a header for testing multiple tenants
     // If not localhost, try to extract first part of domain
     if (host === 'localhost' || host === '127.0.0.1') {
-        // For local testing, we can use a localStorage or cookie if needed, 
-        // but here we'll default to 'demo' if not specified
-        config.headers['X-Tenant-Id'] = localStorage.getItem('tenantId') || 'demo';
+        // Enforce 'demo' tenant for local development to avoid stale UUIDs from localStorage
+        config.headers['X-Tenant-Id'] = 'demo';
     } else if (parts.length >= 3) {
         config.headers['X-Tenant-Id'] = parts[0];
     }

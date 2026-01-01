@@ -2,9 +2,13 @@
     "name": "pitayacode-academy-root",
     "private": true,
     "scripts": {
+        "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
         "dev:api": "cd api && npm run start:dev",
         "dev:web": "cd frontend && npm run dev",
         "install:all": "cd api && npm install && cd ../frontend && npm install",
         "build:all": "cd api && npm run build && cd ../frontend && npm run build"
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1"
     }
 }

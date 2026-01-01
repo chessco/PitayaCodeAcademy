@@ -43,3 +43,21 @@ export class ReorderLessonsDto {
     @IsString({ each: true })
     lessonIds: string[];
 }
+
+export class CreateLessonResourceDto {
+    @IsString()
+    @IsNotEmpty()
+    title: string;
+
+    @IsUrl()
+    @IsNotEmpty()
+    url: string;
+
+    @IsString()
+    @IsOptional()
+    fileSize?: string;
+
+    @IsString()
+    @IsOptional()
+    fileType?: string;
+}

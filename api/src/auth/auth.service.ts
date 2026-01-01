@@ -19,6 +19,13 @@ export class AuthService {
         return null;
     }
 
+    async getProfile(userId: string) {
+        const user = await this.usersService.findById(userId);
+        if (!user) return null;
+        const { passwordHash, ...result } = user;
+        return result;
+    }
+
     async login(user: any) {
         const payload = { email: user.email, sub: user.id };
         return {
@@ -31,12 +38,12 @@ export class AuthService {
         };
     }
 
-    async signUp(email: string, pass: string) {
+    async signUp(email: string, pass: string, name?: string) {
         const existing = await this.usersService.findByEmail(email);
         if (existing) {
             throw new UnauthorizedException('User already exists');
         }
-        const user = await this.usersService.create(email, pass);
+        const user = await this.usersService.create(email, pass, name);
         return this.login(user);
     }
 }

@@ -52,4 +52,38 @@ export class EnrollmentService {
         });
         return !!enrollment;
     }
+
+    async getStudentsByCourse(courseId: string) {
+        const enrollments = await this.prisma.enrollment.findMany({
+            where: { courseId },
+            include: {
+                student: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            }
+                        }
+                    }
+                }
+            },
+        });
+
+        // For now, return mock progress as the schema doesn't track lesson completion yet
+        return enrollments.map((e: any) => ({
+            id: e.id,
+            studentId: e.studentId,
+            name: e.student.user.name,
+            email: e.student.user.email,
+            avatar: e.student.avatarUrl,
+            status: 'Activo', // Mock status
+            progress: Math.floor(Math.random() * 100), // Mock progress
+            completedLessons: Math.floor(Math.random() * 10), // Mock
+            totalLessons: 12, // Mock from Studio.tsx
+            lastAccess: 'Hace 2 horas', // Mock
+            createdAt: e.createdAt,
+        }));
+    }
 }

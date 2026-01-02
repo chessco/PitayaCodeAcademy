@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { DiscussionsService } from './discussions.service';
@@ -16,6 +16,19 @@ export class DiscussionsController {
     @Get('course/:courseId')
     async getTopics(@Param('courseId') courseId: string) {
         return this.discussionsService.getTopicsByCourse(courseId);
+    }
+
+    @Get('studio')
+    async getStudioTopics(@Request() req: any) {
+        const tenantId = this.tenantContext.tenantIdOrThrow;
+        const membership = req.tenantMembership;
+
+        if (membership.role === 'INSTRUCTOR') {
+            return this.discussionsService.getStudioTopics(tenantId, membership.id);
+        }
+
+        // Admin sees all
+        return this.discussionsService.getStudioTopics(tenantId);
     }
 
     @Get('topic/:topicId')
@@ -41,5 +54,11 @@ export class DiscussionsController {
     async updateTopic(@Param('topicId') topicId: string, @Request() req: any, @Body() dto: UpdateTopicDto) {
         const userId = req.user.id;
         return this.discussionsService.updateTopic(userId, topicId, dto);
+    }
+
+    @Delete('topic/:topicId')
+    async deleteTopic(@Param('topicId') topicId: string, @Request() req: any) {
+        const userId = req.user.id;
+        return this.discussionsService.deleteTopic(userId, topicId);
     }
 }

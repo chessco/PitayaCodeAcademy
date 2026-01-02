@@ -62,9 +62,10 @@ export class PrismaService implements OnModuleInit {
     get tenantMembership() { return this._client.tenantMembership; }
     get course() { return this._client.course; }
     get lesson() { return this._client.lesson; }
-    get lessonResource() { return this._client.lessonResource; }
+    get courseResource() { return this._client.courseResource; }
     get enrollment() { return this._client.enrollment; }
     get order() { return this._client.order; }
+    get orderItem() { return this._client.orderItem; }
     get coupon() { return this._client.coupon; }
     get module() { return this._client.module; }
     get review() { return this._client.review; }

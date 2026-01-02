@@ -47,16 +47,23 @@ export class LessonService {
     }
 
     async addResource(lessonId: string, data: CreateLessonResourceDto) {
-        return this.prisma.lessonResource.create({
+        const lesson = await this.prisma.lesson.findUnique({
+            where: { id: lessonId },
+            select: { courseId: true }
+        });
+        if (!lesson) throw new NotFoundException('Lesson not found');
+
+        return this.prisma.courseResource.create({
             data: {
                 ...data,
                 lessonId,
+                courseId: lesson.courseId,
             },
         });
     }
 
     async removeResource(id: string) {
-        return this.prisma.lessonResource.delete({
+        return this.prisma.courseResource.delete({
             where: { id },
         });
     }

@@ -28,6 +28,38 @@ export class DiscussionsService {
         });
     }
 
+    async getStudioTopics(tenantId: string, instructorId?: string) {
+        const where: any = { course: { tenantId } };
+
+        // If instructorId is provided, filter topics for courses taught by this instructor
+        if (instructorId) {
+            where.course.instructorId = instructorId;
+        }
+
+        return this.prisma.discussionTopic.findMany({
+            where,
+            include: {
+                author: {
+                    include: {
+                        user: {
+                            select: { name: true, email: true, id: true }
+                        }
+                    }
+                },
+                course: {
+                    select: { title: true, id: true }
+                },
+                _count: {
+                    select: { posts: true }
+                }
+            },
+            orderBy: [
+                { isPinned: 'desc' },
+                { createdAt: 'desc' }
+            ]
+        });
+    }
+
     async getTopicDetail(topicId: string) {
         const topic = await this.prisma.discussionTopic.findUnique({
             where: { id: topicId },
@@ -119,6 +151,31 @@ export class DiscussionsService {
         return this.prisma.discussionTopic.update({
             where: { id: topicId },
             data: dto
+        });
+    }
+
+    async deleteTopic(userId: string, topicId: string) {
+        const topic = await this.prisma.discussionTopic.findUnique({
+            where: { id: topicId },
+            include: { author: true }
+        });
+
+        if (!topic) throw new NotFoundException('Topic not found');
+
+        const membership = await this.prisma.tenantMembership.findFirst({
+            where: { userId, tenantId: topic.author.tenantId }
+        });
+
+        // Instructors can delete topics in their courses, Admins can delete anything
+        if (membership?.role !== 'ADMIN') {
+            const course = await this.prisma.course.findUnique({ where: { id: topic.courseId } });
+            if (course?.instructorId !== membership?.id) {
+                throw new ForbiddenException('Not allowed to delete this topic');
+            }
+        }
+
+        return this.prisma.discussionTopic.delete({
+            where: { id: topicId }
         });
     }
 }

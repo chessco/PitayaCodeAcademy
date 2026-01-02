@@ -11,6 +11,12 @@ import Catalog from './pages/Catalog';
 import CourseDetail from './pages/CourseDetail';
 import CoursePlayer from './pages/CoursePlayer';
 import Studio from './pages/Studio';
+import InstructorDashboard from './pages/InstructorDashboard';
+import CourseStudents from './pages/CourseStudents';
+import StudioForums from './pages/StudioForums';
+import CourseResources from './pages/CourseResources';
+import InstructorFinances from './pages/InstructorFinances';
+import InstructorReports from './pages/InstructorReports';
 import Login from './pages/Login';
 import MyCourses from './pages/MyCourses';
 import Signup from './pages/Signup';
@@ -19,7 +25,7 @@ import CourseEditor from './pages/CourseEditor';
 import Coupons from './pages/Coupons';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
-import Analytics from './pages/Analytics';
+import InstructorAnalytics from './pages/InstructorAnalytics';
 import Messages from './pages/Messages';
 import StudentDashboard from './pages/StudentDashboard';
 import CourseReview from './pages/CourseReview';
@@ -103,7 +109,22 @@ const App = () => {
                             } />
                             <Route path="/studio" element={
                                 <ProtectedPage>
+                                    <InstructorDashboard />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/courses" element={
+                                <ProtectedPage>
                                     <Studio />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/courses/:id/students" element={
+                                <ProtectedPage>
+                                    <CourseStudents />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/courses/:id/resources" element={
+                                <ProtectedPage>
+                                    <CourseResources />
                                 </ProtectedPage>
                             } />
                             <Route path="/studio/courses/:id" element={
@@ -121,6 +142,11 @@ const App = () => {
                                     <Settings />
                                 </ProtectedPage>
                             } />
+                            <Route path="/studio/forums" element={
+                                <ProtectedPage>
+                                    <StudioForums />
+                                </ProtectedPage>
+                            } />
                             <Route path="/studio/users" element={
                                 <ProtectedPage>
                                     <Users />
@@ -128,7 +154,17 @@ const App = () => {
                             } />
                             <Route path="/studio/analytics" element={
                                 <ProtectedPage>
-                                    <Analytics />
+                                    <InstructorAnalytics />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/finances" element={
+                                <ProtectedPage>
+                                    <InstructorFinances />
+                                </ProtectedPage>
+                            } />
+                            <Route path="/studio/reports" element={
+                                <ProtectedPage>
+                                    <InstructorReports />
                                 </ProtectedPage>
                             } />
                             <Route path="/studio/messages" element={

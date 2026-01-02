@@ -5,9 +5,9 @@ import {
     Plus, Edit2, Trash2, GripVertical, Settings, Users,
     BarChart3, Box, Loader2, Download, Search, ChevronDown,
     MoreHorizontal, Filter, ArrowUpRight, GraduationCap,
-    CircleDollarSign, LayoutGrid
+    CircleDollarSign, LayoutGrid, FileText
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Studio() {
     const queryClient = useQueryClient();
@@ -18,6 +18,14 @@ export default function Studio() {
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
     const ITEMS_PER_PAGE = 8;
+    const location = useLocation();
+
+    React.useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('create') === 'true') {
+            setShowCreate(true);
+        }
+    }, [location.search]);
 
     const { data, isLoading } = useQuery({
         queryKey: ['studio-courses', page],
@@ -195,13 +203,37 @@ export default function Studio() {
                                     <td className="px-8 py-6 text-right">
                                         <div className="flex items-center justify-end space-x-2">
                                             <Link
+                                                to={`/studio/courses/${course.id}/students`}
+                                                className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-primary hover:bg-primary/10 transition-all group/btn relative"
+                                            >
+                                                <Users className="w-4 h-4" />
+                                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-10">
+                                                    Gestionar Estudiantes
+                                                </span>
+                                            </Link>
+                                            <Link
+                                                to={`/studio/courses/${course.id}/resources`}
+                                                className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-amber-500 hover:bg-amber-500/10 transition-all group/btn relative"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-10">
+                                                    Gestionar Recursos
+                                                </span>
+                                            </Link>
+                                            <Link
                                                 to={`/studio/courses/${course.id}`}
-                                                className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+                                                className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all group/btn relative"
                                             >
                                                 <Edit2 className="w-4 h-4" />
+                                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-10">
+                                                    Editar Curso
+                                                </span>
                                             </Link>
-                                            <button className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                                            <button className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all group/btn relative">
                                                 <Trash2 className="w-4 h-4" />
+                                                <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-10">
+                                                    Eliminar
+                                                </span>
                                             </button>
                                         </div>
                                     </td>

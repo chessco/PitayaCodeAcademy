@@ -4,7 +4,8 @@ import {
     BookOpen, Monitor, LogOut, ChevronRight, LayoutDashboard, Settings,
     User as UserIcon, Users, BarChart3, CreditCard, Bell, HelpCircle,
     Eye, ChevronDown, Database, ShoppingCart, LayoutGrid, Tag, GraduationCap,
-    Award, MessageSquare, Search, PlayCircle
+    Award, MessageSquare, Search, PlayCircle, Plus, FileBarChart, Download,
+    Filter, ArrowUpRight, Loader2, MoreHorizontal, Box
 } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -41,11 +42,13 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 
     const instructorNavItems = [
         { label: 'Tablero', icon: LayoutGrid, path: '/studio' },
-        { label: 'Mis Cursos', icon: BookOpen, path: '/studio' },
-        { label: 'Estudiantes', icon: Users, path: '/studio/users' }, // Reusing Users page for now
+        { label: 'Mis Cursos', icon: BookOpen, path: '/studio/courses' },
+        { label: 'Estudiantes', icon: Users, path: '/studio/users' },
+        { label: 'Foros', icon: MessageSquare, path: '/studio/forums', badge: '12' },
         { label: 'Análisis', icon: BarChart3, path: '/studio/analytics' },
-        { label: 'Mensajes', icon: MessageSquare, path: '/studio/messages' },
-        { label: 'Notificaciones', icon: Bell, path: '/notifications' },
+        { label: 'Reportes', icon: FileBarChart, path: '/studio/reports' },
+        { label: 'Finanzas', icon: CreditCard, path: '/studio/finances' },
+        { label: 'Configuración', icon: Settings, path: '/studio/settings' },
     ];
 
     const configNavItems = [
@@ -166,6 +169,20 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                     )}
                 </nav>
 
+                {/* Add Create Course Button for Instructor in Studio */}
+                {isAdminRoute && isInstructor && (
+                    <div className="mt-8 px-2 pb-8">
+                        <button
+                            onClick={() => navigate('/studio/courses?create=true')}
+                            className="w-full bg-primary text-white py-4 rounded-2xl font-black text-xs flex items-center justify-center space-x-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span>CREAR CURSO</span>
+                        </button>
+                    </div>
+                )}
+
+
                 {/* Storage Widget - Only for Admin */}
                 {isAdminRoute && isAdmin && (
                     <div className="mt-8 px-2 py-6 border-t border-white/5">
@@ -182,15 +199,8 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                     </div>
                 )}
 
-                <div className="pt-6 border-t border-white/5 space-y-2">
-                    {isAdminRoute && (
-                        <NavItem
-                            item={{ label: 'Ajustes', icon: Settings, path: '/studio/settings' }}
-                            isActive={location.pathname === '/studio/settings'}
-                        />
-                    )}
-
-                    {user ? (
+                <div className="pt-6 border-t border-white/5 space-y-4">
+                    {!isAdminRoute && user ? (
                         <button
                             onClick={() => { logout(); navigate('/login'); }}
                             className="flex items-center space-x-3 w-full p-3 rounded-2xl hover:bg-white/5 text-gray-500 hover:text-red-400 transition-all group"
@@ -198,6 +208,21 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                             <LogOut className="w-5 h-5" />
                             <span className="font-bold text-xs uppercase tracking-widest">Cerrar Sesión</span>
                         </button>
+                    ) : isAdminRoute ? (
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 border border-white/10">
+                                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover" alt="user" />
+                                </div>
+                                <div className="overflow-hidden">
+                                    <h3 className="text-[11px] font-black text-white truncate">Carlos Ruiz</h3>
+                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Instructor Senior</p>
+                                </div>
+                            </div>
+                            <button className="p-2 text-gray-600 hover:text-white transition-colors">
+                                <Settings className="w-4 h-4" />
+                            </button>
+                        </div>
                     ) : (
                         <Link to="/login" className="flex items-center justify-center space-x-3 p-4 w-full bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
                             <span>Iniciar Sesión</span>

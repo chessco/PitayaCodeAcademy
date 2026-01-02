@@ -12,6 +12,9 @@ import { TenantModule } from './tenants/tenant.module';
 import { ReviewModule } from './courses/reviews/review.module';
 import { DiscussionsModule } from './discussions/discussions.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { FinanceModule } from './finances/finance.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -26,7 +29,10 @@ import { NotificationsModule } from './notifications/notifications.module';
     TenantModule,
     ReviewModule,
     DiscussionsModule,
-    NotificationsModule
+    NotificationsModule,
+    AnalyticsModule,
+    FinanceModule,
+    ReportsModule
   ],
   controllers: [],
   providers: [],

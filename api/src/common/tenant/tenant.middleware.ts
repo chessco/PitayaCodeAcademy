@@ -8,6 +8,11 @@ export class TenantMiddleware implements NestMiddleware {
     constructor(private prisma: PrismaService) { }
 
     async use(req: Request, res: Response, next: NextFunction) {
+        // Skip tenant resolution for preflight requests
+        if (req.method === 'OPTIONS') {
+            return next();
+        }
+
         // 1. Resolve tenant identifier (slug or UUID)
         let tenantIdentifier = req.headers['x-tenant-id'] as string;
 

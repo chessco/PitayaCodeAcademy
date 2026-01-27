@@ -4,20 +4,22 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
 });
 
-// Interceptor to add Tenant ID
+// Interceptor to add Tenant ID and Auth Token
 api.interceptors.request.use((config) => {
-    // Resolve tenant from hostname
     const host = window.location.hostname;
-    const parts = host.split('.');
 
-    // In dev (localhost), we might want to use a header for testing multiple tenants
-    // If not localhost, try to extract first part of domain
-    if (host === 'localhost' || host === '127.0.0.1') {
-        // Enforce 'demo' tenant for local development to avoid stale UUIDs from localStorage
-        config.headers['X-Tenant-Id'] = 'demo';
-    } else if (parts.length >= 3) {
-        config.headers['X-Tenant-Id'] = parts[0];
+    // Resolve tenant slug
+    let tenantSlug = 'demo'; // Default for local dev
+
+    if (host === 'academy.pitayacode.io') {
+        tenantSlug = 'academy-api';
+    } else if (host !== 'localhost' && host !== '127.0.0.1') {
+        // Fallback or dynamic resolution for other domains if needed
+        // For now, we explicitly handle the academy domain
+        tenantSlug = host.split('.')[0];
     }
+
+    config.headers['X-Tenant-Id'] = tenantSlug;
 
     const token = localStorage.getItem('token');
     if (token) {

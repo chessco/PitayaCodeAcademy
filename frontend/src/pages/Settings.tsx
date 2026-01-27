@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useSearchParams } from 'react-router-dom';
+import api from '../services/api';
 
 type Tab = 'general' | 'billing' | 'security' | 'notifications';
 
@@ -25,13 +26,9 @@ export default function Settings() {
         const fetchTenant = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch('http://localhost:3001/tenants/me', {
-                    headers: {
-                        'x-tenant-id': 'academy' // In a real app, this would be dynamic from the host or context
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
+                const response = await api.get('/tenants/me');
+                if (response.data) {
+                    const data = response.data;
                     setTenantName(data.name);
                     setAccentColor(data.accentColor || '#3b82f6');
                     setLogoUrl(data.logoUrl || '');
@@ -55,20 +52,13 @@ export default function Settings() {
         setIsSaving(true);
         setSaveStatus('idle');
         try {
-            const response = await fetch('http://localhost:3001/tenants/me', {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-tenant-id': 'academy'
-                },
-                body: JSON.stringify({
-                    name: tenantName,
-                    accentColor: accentColor,
-                    logoUrl: logoUrl
-                })
+            const response = await api.patch('/tenants/me', {
+                name: tenantName,
+                accentColor: accentColor,
+                logoUrl: logoUrl
             });
 
-            if (response.ok) {
+            if (response.status === 200 || response.status === 204) {
                 setSaveStatus('success');
                 setTimeout(() => setSaveStatus('idle'), 3000);
             } else {

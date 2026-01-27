@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: (origin, callback) => {
+    origin: (origin: any, callback: any) => {
       // Allow all origins to resolve CORS once and for all
       callback(null, true);
     },

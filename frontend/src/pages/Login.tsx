@@ -5,8 +5,8 @@ import { Mail, Lock, Loader2, Sparkles, GraduationCap, ArrowRight, Facebook } fr
 import { motion } from 'framer-motion';
 
 export default function Login() {
-    const [email, setEmail] = useState('admin@demo.com');
-    const [password, setPassword] = useState('admin123');
+    const [email, setEmail] = useState('admin@pitayacode.io');
+    const [password, setPassword] = useState('pitaya123');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();

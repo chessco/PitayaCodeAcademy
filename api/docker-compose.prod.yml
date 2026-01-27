@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  api:
+    container_name: academy-api
+    image: academy-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node dist/src/main
+    ports:
+      - '3004:3004'
+    env_file:
+      - .env.production
+    restart: always
+    networks:
+      - pitaya_net
+
+networks:
+  pitaya_net:
+    external: true

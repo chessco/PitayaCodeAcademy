@@ -26,6 +26,6 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/prisma ./prisma
 
-EXPOSE 3000
+EXPOSE 3004
 
 CMD ["npm", "run", "start:prod"]

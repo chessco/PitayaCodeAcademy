@@ -1,5 +1,2 @@
-SELECT U.id, U.email, U.passwordHash, TM.tenantId, T.slug, TM.role 
-FROM User U 
-LEFT JOIN TenantMembership TM ON U.id = TM.userId 
-LEFT JOIN Tenant T ON TM.tenantId = T.id 
-WHERE U.email = 'admin@pitayacode.io';
+UPDATE User SET passwordHash = '$2b$10$H3W.zQIoKgMZ6CG9G5/OM.2DJby6iLdGKMQl2I3kQy2V3ud0KV7EW' WHERE email = 'admin@pitayacode.io';
+SELECT email, passwordHash FROM User WHERE email = 'admin@pitayacode.io';

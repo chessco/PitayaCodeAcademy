@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import {
     Users, Search, Filter, Download, Mail, MoreVertical,
     ChevronLeft, ChevronRight, GraduationCap, CheckCircle2,
-    AlertCircle, Clock
+    AlertCircle, Clock, Plus, X, Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -13,6 +13,25 @@ export default function CourseStudents() {
     const { id: courseId } = useParams();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('Todos');
+    const [showEnrollModal, setShowEnrollModal] = useState(false);
+    const [enrollEmail, setEnrollEmail] = useState('');
+    const queryClient = useQueryClient();
+
+    const enrollMutation = useMutation({
+        mutationFn: async (email: string) => {
+            return api.post('/enrollments/course', { email, courseId });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['course-students', courseId] });
+            setShowEnrollModal(false);
+            setEnrollEmail('');
+            alert('Estudiante inscrito exitosamente');
+        },
+        onError: (error: any) => {
+            const message = error.response?.data?.message || 'Error al inscribir estudiante';
+            alert(message);
+        }
+    });
 
     const { data: course } = useQuery({
         queryKey: ['course-detail', courseId],
@@ -111,13 +130,75 @@ export default function CourseStudents() {
                         <option>Completado</option>
                     </select>
                 </div>
-                <div className="md:col-span-4 flex justify-end">
-                    <button className="w-full md:w-auto bg-primary text-white px-8 py-3.5 rounded-2xl font-black text-xs flex items-center justify-center space-x-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20">
+                <div className="md:col-span-4 flex justify-end space-x-3">
+                    <button
+                        onClick={() => setShowEnrollModal(true)}
+                        className="bg-white/10 border border-white/5 text-white px-6 py-3.5 rounded-2xl font-black text-xs flex items-center justify-center space-x-2 hover:bg-white/20 transition-all"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span className="uppercase tracking-widest hidden lg:block">NUEVO ESTUDIANTE</span>
+                        <span className="uppercase tracking-widest lg:hidden">NUEVO</span>
+                    </button>
+                    <button className="bg-primary text-white px-8 py-3.5 rounded-2xl font-black text-xs flex items-center justify-center space-x-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20">
                         <Mail className="w-4 h-4" />
-                        <span className="uppercase tracking-widest">Mensaje Grupal</span>
+                        <span className="uppercase tracking-widest hidden lg:block">Mensaje Grupal</span>
                     </button>
                 </div>
             </div>
+
+            {/* Enroll Modal */}
+            {showEnrollModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-[100] flex items-center justify-center p-6">
+                    <div className="bg-[#111114] border border-white/10 p-10 rounded-[3rem] w-full max-w-lg space-y-8 animate-in fade-in zoom-in duration-300 relative">
+                        <button
+                            onClick={() => setShowEnrollModal(false)}
+                            className="absolute top-8 right-8 p-2 bg-white/5 rounded-full hover:bg-white/10 transition-all text-gray-500 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div>
+                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                                <GraduationCap className="w-8 h-8 text-primary" />
+                            </div>
+                            <h2 className="text-3xl font-black text-white tracking-tight mb-2">Inscribir Estudiante</h2>
+                            <p className="text-gray-500 text-sm font-medium">
+                                Ingresa el correo electrónico del estudiante para agregarlo a este curso.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1">
+                                    Correo Electrónico
+                                </label>
+                                <input
+                                    type="email"
+                                    placeholder="ejemplo@pitayacode.io"
+                                    value={enrollEmail}
+                                    onChange={(e) => setEnrollEmail(e.target.value)}
+                                    className="w-full bg-white/[0.03] border border-white/10 p-4 rounded-2xl text-sm font-medium text-white focus:outline-none focus:border-primary/50 transition-colors"
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => enrollMutation.mutate(enrollEmail)}
+                                disabled={enrollMutation.isPending || !enrollEmail}
+                                className="w-full bg-primary text-white font-black text-xs py-4 rounded-2xl uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                            >
+                                {enrollMutation.isPending ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>INSCRIBIENDO...</span>
+                                    </>
+                                ) : (
+                                    <span>CONFIRMAR INSCRIPCIÓN</span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Students Table */}
             <div className="bg-[#111114] border border-white/5 rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
@@ -173,7 +254,7 @@ export default function CourseStudents() {
                                                     animate={{ width: `${student.progress}%` }}
                                                     transition={{ duration: 1, ease: "easeOut" }}
                                                     className={`h-full rounded-full ${student.progress > 90 ? 'bg-emerald-500' :
-                                                            student.progress < 20 ? 'bg-amber-500' : 'bg-primary'
+                                                        student.progress < 20 ? 'bg-amber-500' : 'bg-primary'
                                                         }`}
                                                 />
                                             </div>

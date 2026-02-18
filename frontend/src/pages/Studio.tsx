@@ -57,6 +57,20 @@ export default function Studio() {
         }
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            return api.delete(`/courses/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['studio-courses'] });
+        },
+        onError: (error: any) => {
+            console.error('Error deleting course:', error);
+            const message = error.response?.data?.message || error.message || 'Error al eliminar el curso.';
+            alert(Array.isArray(message) ? message.join('\n') : message);
+        }
+    });
+
     const slugify = (text: string) => {
         return text
             .toLowerCase()
@@ -229,7 +243,14 @@ export default function Studio() {
                                                     Editar Curso
                                                 </span>
                                             </Link>
-                                            <button className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all group/btn relative">
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm('¿Estás seguro de eliminar este curso? Esta acción no se puede deshacer.')) {
+                                                        deleteMutation.mutate(course.id);
+                                                    }
+                                                }}
+                                                className="p-2.5 bg-white/5 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all group/btn relative"
+                                            >
                                                 <Trash2 className="w-4 h-4" />
                                                 <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-10">
                                                     Eliminar

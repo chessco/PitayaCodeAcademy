@@ -107,8 +107,10 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                             />
                         </div>
                         <div className="overflow-hidden">
-                            <h2 className="text-sm font-black text-white truncate">{user?.name || 'Juan Pérez'}</h2>
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Estudiante</p>
+                            <h2 className="text-sm font-black text-white truncate">{user?.name || 'Usuario'}</h2>
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                {currentRole === 'INSTRUCTOR' ? 'Instructor' : currentRole === 'ADMIN' ? 'Administrador' : 'Estudiante'}
+                            </p>
                         </div>
                     </div>
                 ) : (

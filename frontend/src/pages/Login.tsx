@@ -188,7 +188,7 @@ export default function Login() {
                             <Link to="/signup" className="text-blue-500 hover:text-blue-400">Regístrate</Link>
                         </p>
                         <div className="pt-4 opacity-20 text-[8px] font-mono tracking-tighter uppercase">
-                            Build: 2026.01.27.FINAL.V1
+                            Build: 2026.01.27.FINAL.V3
                         </div>
                     </div>
                 </motion.div>

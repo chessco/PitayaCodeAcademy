@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -25,6 +25,30 @@ export class EnrollmentService {
         });
     }
 
+    async enrollByEmail(email: string, courseId: string, tenantId: string) {
+        // Find existing membership in this tenant for the user with this email
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+            include: {
+                memberships: {
+                    where: { tenantId }
+                }
+            }
+        });
+
+        if (!user) {
+            throw new ConflictException('El usuario no existe en la plataforma. Debe registrarse primero.');
+        }
+
+        const membership = user.memberships[0];
+
+        if (!membership) {
+            throw new ConflictException('El usuario existe pero no es miembro de esta academia.');
+        }
+
+        return this.enrollStudent(membership.id, courseId);
+    }
+
     async getMyEnrollments(studentId: string) {
         return this.prisma.enrollment.findMany({
             where: { studentId },
@@ -38,8 +62,13 @@ export class EnrollmentService {
                         level: true,
                         description: true,
                         instructor: { include: { user: { select: { email: true, name: true } } } },
+                        _count: { select: { lessons: true } }
                     },
                 },
+                completedLessons: true,
+            },
+            orderBy: {
+                lastAccessedAt: 'desc',
             },
         });
     }
@@ -85,5 +114,65 @@ export class EnrollmentService {
             lastAccess: 'Hace 2 horas', // Mock
             createdAt: e.createdAt,
         }));
+    }
+
+    async getProgress(studentId: string, courseId: string) {
+        const enrollment = await this.prisma.enrollment.findUnique({
+            where: {
+                courseId_studentId: { courseId, studentId },
+            },
+            include: {
+                completedLessons: true,
+            },
+        });
+
+        if (!enrollment) return null;
+
+        // Update last accessed time
+        await this.prisma.enrollment.update({
+            where: { id: enrollment.id },
+            data: { lastAccessedAt: new Date() }
+        });
+
+        return {
+            completedLessonIds: enrollment.completedLessons.map((l: any) => l.lessonId),
+        };
+    }
+
+    async markLessonComplete(studentId: string, courseId: string, lessonId: string) {
+        const enrollment = await this.prisma.enrollment.findUnique({
+            where: {
+                courseId_studentId: { courseId, studentId },
+            },
+        });
+
+        if (!enrollment) {
+            throw new NotFoundException('Inscripción no encontrada');
+        }
+
+        // Update last accessed time
+        await this.prisma.enrollment.update({
+            where: { id: enrollment.id },
+            data: { lastAccessedAt: new Date() }
+        });
+
+        // Check if already completed using type casting for new model
+        const existing = await this.prisma.lessonProgress.findUnique({
+            where: {
+                enrollmentId_lessonId: {
+                    enrollmentId: enrollment.id,
+                    lessonId,
+                },
+            },
+        });
+
+        if (existing) return existing;
+
+        return this.prisma.lessonProgress.create({
+            data: {
+                enrollmentId: enrollment.id,
+                lessonId,
+            },
+        });
     }
 }

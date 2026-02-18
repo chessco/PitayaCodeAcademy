@@ -20,6 +20,9 @@ export class CourseService {
                 orderBy: { createdAt: 'desc' },
                 include: {
                     instructor: { include: { user: { select: { email: true, name: true } } } },
+                    _count: {
+                        select: { lessons: true, enrollments: true }
+                    }
                 },
             }),
             this.prisma.course.count({ where })
@@ -79,5 +82,30 @@ export class CourseService {
             where: { id },
             data,
         });
+    }
+
+    async delete(id: string) {
+        // Check for active enrollments
+        const enrollmentsCount = await this.prisma.enrollment.count({
+            where: { courseId: id }
+        });
+
+        if (enrollmentsCount > 0) {
+            throw new ConflictException('No se puede eliminar el curso porque tiene estudiantes inscritos. Por favor, deshabilítalo (cambia estado a Borrador) para ocultarlo del catálogo público.');
+        }
+
+        try {
+            // Delete related resources first if cascading is not set up in DB
+            // However, Prisma usually handles this if relations are set to cascade, or we might need to manually delete
+            // For now, let's try delete and let Prisma throw if constraint fails
+            return await this.prisma.course.delete({
+                where: { id },
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+                throw new ConflictException('No se puede eliminar el curso debido a dependencias en la base de datos (recursos, lecciones, etc.).');
+            }
+            throw error;
+        }
     }
 }

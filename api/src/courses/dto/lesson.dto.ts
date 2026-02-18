@@ -1,4 +1,5 @@
-import { IsString, IsInt, IsBoolean, IsOptional, IsNotEmpty, IsUrl } from 'class-validator';
+import { IsString, IsInt, IsBoolean, IsOptional, IsNotEmpty, IsUrl, ValidateIf } from 'class-validator';
+
 
 export class CreateLessonDto {
     @IsString()
@@ -37,6 +38,11 @@ export class UpdateLessonDto {
     @IsBoolean()
     @IsOptional()
     isPublished?: boolean;
+
+    @ValidateIf((o) => o.moduleId !== null)
+    @IsString()
+    @IsOptional()
+    moduleId?: string | null;
 }
 
 export class ReorderLessonsDto {

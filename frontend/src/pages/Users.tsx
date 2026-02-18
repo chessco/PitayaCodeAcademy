@@ -6,7 +6,7 @@ import {
     MoreHorizontal, Mail, Shield, ChevronDown,
     ArrowUpRight, UserCheck, UserMinus, Download, Loader2,
     ChevronRight, ChevronLeft, MoreVertical, Ban, GraduationCap,
-    Crown
+    Crown, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

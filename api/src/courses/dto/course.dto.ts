@@ -57,4 +57,8 @@ export class UpdateCourseDto {
     @IsString()
     @IsOptional()
     thumbnail?: string;
+
+    @IsString()
+    @IsOptional()
+    learningOutcomes?: string;
 }

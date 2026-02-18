@@ -26,9 +26,22 @@ export default function StudentDashboard() {
 
     const displayNotifications = notifications?.slice(0, 4) || [];
 
+
+    const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
+        queryKey: ['my-enrollments'],
+        queryFn: async () => {
+            const res = await api.get('/enrollments/my');
+            return res.data;
+        }
+    });
+
+    const activeCourses = enrollments || [];
+    const mostRecentCourse = activeCourses[0];
+    const otherActiveCourses = activeCourses.slice(1, 3);
+
     return (
         <div className="space-y-10 pb-20">
-            {/* Header / Search Area */}
+            {/* ... Header ... */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="relative flex-1 max-w-2xl">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -44,7 +57,7 @@ export default function StudentDashboard() {
                         <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-[#09090b]" />
                     </button>
                     <Link
-                        to="/"
+                        to="/catalog"
                         className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-xs hover:scale-[1.02] transition-all shadow-xl shadow-primary/20"
                     >
                         Explorar Cursos
@@ -73,7 +86,7 @@ export default function StudentDashboard() {
                         <StatCard
                             icon={<CheckCircle2 className="w-5 h-5 text-green-400" />}
                             label="Cursos Completados"
-                            value="12"
+                            value={activeCourses.filter((e: any) => e.progress === 100).length.toString()}
                             trend="+2 este mes"
                             trendColor="text-green-400"
                         />
@@ -96,53 +109,62 @@ export default function StudentDashboard() {
                     {/* Continue Learning Featured */}
                     <section className="space-y-6">
                         <h2 className="text-xl font-black text-white tracking-tight uppercase tracking-widest text-[11px] text-gray-500">Continuar Aprendiendo</h2>
-                        <div className="group relative overflow-hidden rounded-[2.5rem] bg-[#111114] border border-white/5 flex flex-col md:flex-row items-stretch hover:border-primary/30 transition-all duration-500">
-                            <div className="md:w-2/5 relative overflow-hidden">
-                                <img
-                                    src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1000&auto=format&fit=crop"
-                                    className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                                    alt="Course"
-                                />
-                                <div className="absolute top-4 left-4">
-                                    <span className="px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full">React JS</span>
+                        {mostRecentCourse ? (
+                            <div className="group relative overflow-hidden rounded-[2.5rem] bg-[#111114] border border-white/5 flex flex-col md:flex-row items-stretch hover:border-primary/30 transition-all duration-500">
+                                <div className="md:w-2/5 relative overflow-hidden">
+                                    <img
+                                        src={mostRecentCourse.course.thumbnail || "https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=1000&auto=format&fit=crop"}
+                                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                                        alt="Course"
+                                    />
+                                    <div className="absolute top-4 left-4">
+                                        <span className="px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-full">{mostRecentCourse.course.category || 'General'}</span>
+                                    </div>
+                                </div>
+                                <div className="flex-1 p-8 flex flex-col justify-between space-y-6">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-2xl font-black text-white leading-tight">{mostRecentCourse.course.title}</h3>
+                                            <span className="text-[10px] font-bold text-gray-500">4h 20m restantes</span>
+                                        </div>
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                            {/* Logic to find next lesson could go here, for now placeholder */}
+                                            Siguiente Lección: Explorando conceptos
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center text-[10px] font-black">
+                                            <span className="text-primary uppercase tracking-widest">{mostRecentCourse.progress || 0}% Completado</span>
+                                            <span className="text-gray-500">{mostRecentCourse.completedLessons?.length || 0}/{mostRecentCourse.course._count?.lessons || 0} Lecciones</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${mostRecentCourse.progress || 0}%` }}
+                                                className="h-full bg-primary"
+                                            />
+                                        </div>
+                                        <div className="flex items-center space-x-4 pt-2">
+                                            <Link to={`/courses/${mostRecentCourse.course.id}/learn`} className="flex-1 flex items-center justify-center space-x-3 px-8 py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:scale-[1.03] transition-all shadow-xl shadow-primary/20">
+                                                <PlayCircle className="w-5 h-5" />
+                                                <span>Reanudar Lección</span>
+                                            </Link>
+                                            <button
+                                                onClick={() => navigate('/notifications')}
+                                                className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all relative"
+                                            >
+                                                <Bell className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex-1 p-8 flex flex-col justify-between space-y-6">
-                                <div>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-2xl font-black text-white leading-tight">Desarrollo Frontend Avanzado</h3>
-                                        <span className="text-[10px] font-bold text-gray-500">4h 20m restantes</span>
-                                    </div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Lección 4: Gestión de Estado con Redux Toolkit</p>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center text-[10px] font-black">
-                                        <span className="text-primary uppercase tracking-widest">45% Completado</span>
-                                        <span className="text-gray-500">12/26 Lecciones</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: '45%' }}
-                                            className="h-full bg-primary"
-                                        />
-                                    </div>
-                                    <div className="flex items-center space-x-4 pt-2">
-                                        <button className="flex-1 flex items-center justify-center space-x-3 px-8 py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:scale-[1.03] transition-all shadow-xl shadow-primary/20">
-                                            <PlayCircle className="w-5 h-5" />
-                                            <span>Reanudar Lección</span>
-                                        </button>
-                                        <button
-                                            onClick={() => navigate('/notifications')}
-                                            className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all relative"
-                                        >
-                                            <Bell className="w-5 h-5" />
-                                            <div className="absolute top-4 right-4 w-2 h-2 bg-red-500 rounded-full border-2 border-[#111114]" />
-                                        </button>
-                                    </div>
-                                </div>
+                        ) : (
+                            <div className="p-8 text-center border border-dashed border-white/10 rounded-3xl">
+                                <p className="text-gray-500">No tienes cursos activos. ¡Explora el catálogo!</p>
+                                <Link to="/catalog" className="text-primary font-bold mt-2 inline-block">Ir al Catálogo</Link>
                             </div>
-                        </div>
+                        )}
                     </section>
 
                     {/* Active Courses Grid */}
@@ -152,20 +174,18 @@ export default function StudentDashboard() {
                             <Link to="/my-courses" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">Ver todos</Link>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <MiniCourseCard
-                                title="Python para Data Science"
-                                lastAccess="Último acceso: ayer"
-                                progress={75}
-                                color="bg-green-500"
-                                icon="🐍"
-                            />
-                            <MiniCourseCard
-                                title="Diseño UI/UX Moderno"
-                                lastAccess="Último acceso: hace 3 días"
-                                progress={20}
-                                color="bg-orange-500"
-                                icon="🎨"
-                            />
+                            {otherActiveCourses.length > 0 ? otherActiveCourses.map((enrollment: any) => (
+                                <MiniCourseCard
+                                    key={enrollment.id}
+                                    title={enrollment.course.title}
+                                    lastAccess={`Último acceso: ${new Date(enrollment.lastAccessedAt).toLocaleDateString()}`}
+                                    progress={enrollment.progress || 0}
+                                    color="bg-purple-500"
+                                    icon="💻"
+                                />
+                            )) : (
+                                <p className="text-gray-500 text-sm col-span-2 text-center py-4">No hay más cursos activos.</p>
+                            )}
                         </div>
                     </section>
                 </div>

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Put, Patch, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // I need to create this wrapper
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { RbacGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -78,5 +78,20 @@ export class CourseController {
             console.error(`[CourseController] Error updating course ${id}:`, e);
             throw e;
         }
+    }
+
+    @Delete(':id')
+    @UseGuards(RbacGuard)
+    @Roles(TenantRole.ADMIN, TenantRole.INSTRUCTOR)
+    async delete(@Param('id') id: string, @Request() req: any) {
+        console.log(`[CourseController] Delete request for ID: ${id}`);
+        const membership = req.tenantMembership;
+        const course = await this.courseService.findOne(id);
+
+        if (membership.role === TenantRole.INSTRUCTOR && course.instructorId !== membership.id) {
+            throw new ForbiddenException('No tienes permiso para eliminar este curso');
+        }
+
+        return this.courseService.delete(id);
     }
 }

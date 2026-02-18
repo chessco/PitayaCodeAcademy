@@ -39,7 +39,7 @@ export default function MyCourses() {
     });
 
     const filteredEnrollments = enrollments?.filter((e: any) => {
-        const matchesSearch = e.course.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = e.course?.title?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
         if (activeTab === 'all') return matchesSearch;
         if (activeTab === 'progress') return matchesSearch && e.progress < 100;
         if (activeTab === 'completed') return matchesSearch && e.progress === 100;
@@ -153,15 +153,15 @@ function CourseProgressCard({ enrollment }: any) {
         >
             <div className="aspect-video relative overflow-hidden">
                 <img
-                    src={course.thumbnail || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=2670&auto=format&fit=crop'}
+                    src={course?.thumbnail || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=2670&auto=format&fit=crop'}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                    alt={course.title}
+                    alt={course?.title || 'Course'}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c0e] via-transparent to-transparent blend-multiply" />
 
                 <div className="absolute top-4 left-4">
                     <span className="px-3 py-1.5 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary">
-                        {course.category || 'FRONTEND'}
+                        {course?.category || 'FRONTEND'}
                     </span>
                 </div>
 
@@ -178,10 +178,10 @@ function CourseProgressCard({ enrollment }: any) {
             <div className="p-8 space-y-6 flex-1 flex flex-col">
                 <div className="space-y-3">
                     <h3 className="text-xl font-black text-white leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                        {course.title}
+                        {course?.title || 'Cargando...'}
                     </h3>
                     <p className="text-[11px] text-gray-500 font-medium leading-relaxed line-clamp-2">
-                        {course.description || 'Domina conceptos avanzados y mejora tus habilidades profesionales.'}
+                        {course?.description || 'Domina conceptos avanzados y mejora tus habilidades profesionales.'}
                     </p>
                 </div>
 
@@ -209,14 +209,14 @@ function CourseProgressCard({ enrollment }: any) {
 
                 <div className="pt-2 grid grid-cols-5 gap-3 mt-auto">
                     <Link
-                        to={`/courses/${course.id}/player`}
+                        to={`/courses/${course?.id}/player`}
                         className="col-span-3 h-14 bg-primary text-white rounded-2xl flex items-center justify-center space-x-3 text-[11px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"
                     >
                         <Play className="w-3.5 h-3.5 fill-current" />
                         <span>{isCompleted ? 'Repasar' : 'Continuar'}</span>
                     </Link>
                     <Link
-                        to={`/my-courses/${course.id}/review`}
+                        to={`/my-courses/${course?.id}/review`}
                         className="h-14 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all"
                     >
                         <Star className="w-4 h-4" />
@@ -240,10 +240,10 @@ function ReviewCard({ review }: any) {
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-4">
                     <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10">
-                        <img src={review.course.thumbnail} className="w-full h-full object-cover" alt={review.course.title} />
+                        <img src={review?.course?.thumbnail} className="w-full h-full object-cover" alt={review?.course?.title} />
                     </div>
                     <div>
-                        <h4 className="text-sm font-black text-white group-hover:text-primary transition-colors underline-offset-4 decoration-primary/50">{review.course.title}</h4>
+                        <h4 className="text-sm font-black text-white group-hover:text-primary transition-colors underline-offset-4 decoration-primary/50">{review?.course?.title}</h4>
                         <div className="flex items-center mt-1 text-yellow-500">
                             {[1, 2, 3, 4, 5].map((s) => (
                                 <Star key={s} className={`w-3 h-3 ${s <= review.rating ? 'fill-current' : 'opacity-20'}`} />

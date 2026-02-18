@@ -1,49 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import {
     ChevronLeft, Play, CheckCircle, List, FileText, Info,
     Download, ArrowLeft, ArrowRight, MessageSquare, ChevronDown, ChevronUp,
-    Lock, ChevronRight
+    Lock, ChevronRight, Loader2
 } from 'lucide-react';
 
 export default function CoursePlayer() {
-    const { id } = useParams();
+    const { id: courseId } = useParams();
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'descripcion' | 'recursos' | 'discusion'>('descripcion');
     const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
+    const queryClient = useQueryClient();
 
     const { data: course, isLoading } = useQuery({
-        queryKey: ['course-player', id],
+        queryKey: ['course-player', courseId],
         queryFn: async () => {
-            if (!id) throw new Error('Course ID is required');
-            const res = await api.get(`/courses/${id}`);
+            if (!courseId) throw new Error('Course ID is required');
+            const res = await api.get(`/courses/${courseId}`);
             return res.data;
         },
-        enabled: !!id,
+        enabled: !!courseId,
+    });
+
+    const { data: progress } = useQuery({
+        queryKey: ['course-progress', courseId],
+        queryFn: async () => {
+            if (!courseId) return null;
+            const res = await api.get(`/enrollments/${courseId}/progress`);
+            return res.data;
+        },
+        enabled: !!courseId,
+    });
+
+    const completeLessonMutation = useMutation({
+        mutationFn: async (lessonId: string) => {
+            return api.post(`/enrollments/${courseId}/lessons/${lessonId}/complete`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['course-progress', courseId] });
+        }
     });
 
     const toggleModule = (moduleId: string) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
     };
 
-    // Flatten lessons to match sidebar order: Modules first, then General lessons
+    // Flatten lessons for navigation
     const allLessons = [
         ...(course?.modules?.flatMap((m: any) => (m.lessons || []).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0))) || []),
         ...(course?.lessons?.filter((l: any) => !l.moduleId).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)) || [])
     ];
 
     const activeLesson = allLessons.find((l: any) => l.id === (activeLessonId || allLessons[0]?.id));
-
     const currentIndex = allLessons.findIndex((l: any) => l.id === activeLesson?.id);
     const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
     const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
+    // Set initial active lesson
+    useEffect(() => {
+        if (!activeLessonId && allLessons.length > 0) {
+            setActiveLessonId(allLessons[0].id);
+        }
+    }, [allLessons, activeLessonId]);
+
+
     // Dynamic Progress
     const totalLessons = allLessons.length;
-    const completedCount = 0; // Mock until real enrollment data is added
+    const completedLessonIds = progress?.completedLessonIds || [];
+    const completedCount = completedLessonIds.length;
     const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+    const isCurrentLessonCompleted = activeLesson && completedLessonIds.includes(activeLesson.id);
 
     // Helper to get YouTube Embed URL
     const getYoutubeEmbedUrl = (url: string) => {
@@ -107,7 +136,7 @@ export default function CoursePlayer() {
                     </div>
 
                     <div className="flex-1 p-2">
-                        {course.modules?.map((module: any, mIdx: number) => (
+                        {course?.modules?.map((module: any, mIdx: number) => (
                             <div key={module.id} className="mb-2">
                                 <button
                                     onClick={() => toggleModule(module.id)}
@@ -115,7 +144,7 @@ export default function CoursePlayer() {
                                 >
                                     <div className="text-left">
                                         <p className="text-[10px] font-black uppercase text-gray-500 mb-1">MÓDULO {mIdx + 1}</p>
-                                        <p className="text-xs font-bold text-gray-200">{module.title.replace(/^Módulo \d+: /, '')}</p>
+                                        <p className="text-xs font-bold text-gray-200">{module.title}</p>
                                     </div>
                                     <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${expandedModules[module.id] === false ? '' : 'rotate-180'}`} />
                                 </button>
@@ -123,7 +152,7 @@ export default function CoursePlayer() {
                                 <div className={`space-y-1 mt-1 px-1 ${expandedModules[module.id] === false ? 'hidden' : 'block'}`}>
                                     {(module.lessons || []).sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0)).map((lesson: any) => {
                                         const isActive = (activeLessonId || allLessons[0]?.id) === lesson.id;
-                                        const isCompleted = false; // Mock data
+                                        const isCompleted = completedLessonIds.includes(lesson.id);
 
                                         return (
                                             <button
@@ -158,17 +187,18 @@ export default function CoursePlayer() {
                             </div>
                         ))}
                         {/* Lessons without modules */}
-                        {course.lessons?.filter((l: any) => !l.moduleId).length > 0 && (
+                        {course?.lessons?.filter((l: any) => !l.moduleId).length > 0 && (
                             <div className="mb-4 mt-2">
                                 <div className="px-3 mb-2">
                                     <p className="text-[10px] font-black uppercase text-gray-500 mb-1">CONTENIDO GENERAL</p>
                                 </div>
                                 <div className="space-y-1 px-1">
-                                    {course.lessons
+                                    {course?.lessons
                                         .filter((l: any) => !l.moduleId)
                                         .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0))
                                         .map((lesson: any) => {
                                             const isActive = (activeLessonId || allLessons[0]?.id) === lesson.id;
+                                            const isCompleted = completedLessonIds.includes(lesson.id);
                                             return (
                                                 <button
                                                     key={lesson.id}
@@ -179,7 +209,9 @@ export default function CoursePlayer() {
                                                         }`}
                                                 >
                                                     <div className="mt-0.5">
-                                                        {isActive ? (
+                                                        {isCompleted ? (
+                                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                                        ) : isActive ? (
                                                             <Play className="w-4 h-4 text-primary fill-primary" />
                                                         ) : (
                                                             <div className="w-4 h-4 rounded-full border border-gray-600" />
@@ -230,7 +262,7 @@ export default function CoursePlayer() {
                                     <div className="absolute inset-0 z-0">
                                         <div className="absolute inset-0 bg-black/60 z-10" />
                                         <img
-                                            src={course.thumbnail || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}
+                                            src={course?.thumbnail || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}
                                             alt="background"
                                             className="w-full h-full object-cover opacity-30 grayscale"
                                         />
@@ -256,7 +288,7 @@ export default function CoursePlayer() {
                                 <div className="space-y-3">
                                     <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
                                         <span>
-                                            {course.modules?.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson?.id))?.title.replace(/^Módulo \d+: /, '') || 'Contenido General'}
+                                            {course.modules?.find((m: any) => m.lessons.some((l: any) => l.id === activeLesson?.id))?.title || 'Contenido General'}
                                         </span>
                                         <ArrowRight className="w-3 h-3" />
                                         <span>Lección {currentIndex + 1} de {allLessons.length}</span>
@@ -273,9 +305,22 @@ export default function CoursePlayer() {
                                         <ChevronLeft className="w-4 h-4 mr-2" />
                                         Anterior
                                     </button>
-                                    <button className="h-10 px-6 rounded-xl bg-primary text-white text-xs font-bold flex items-center hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Marcar como Completado
+                                    <button
+                                        onClick={() => activeLesson && completeLessonMutation.mutate(activeLesson.id)}
+                                        disabled={isCurrentLessonCompleted || completeLessonMutation.isPending}
+                                        className={`h-10 px-6 rounded-xl text-xs font-bold flex items-center transition-all shadow-lg ${isCurrentLessonCompleted
+                                            ? 'bg-green-500/10 text-green-500 border border-green-500/20 cursor-default'
+                                            : 'bg-primary text-white hover:bg-primary/90 shadow-primary/30'
+                                            }`}
+                                    >
+                                        {completeLessonMutation.isPending ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : isCurrentLessonCompleted ? (
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                        ) : (
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                        )}
+                                        {isCurrentLessonCompleted ? 'Completada' : 'Marcar como Completado'}
                                     </button>
                                     <button
                                         onClick={() => nextLesson && setActiveLessonId(nextLesson.id)}
@@ -312,26 +357,7 @@ export default function CoursePlayer() {
                                 <div className="lg:col-span-2 space-y-8">
                                     {activeTab === 'descripcion' && (
                                         <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed text-sm">
-                                            <p className="mb-6">{activeLesson?.content || 'Selecciona una lección para ver su contenido.'}</p>
-
-                                            <h3 className="text-white font-bold mb-4">Lo que aprenderás:</h3>
-                                            <ul className="space-y-4 list-none p-0">
-                                                {[
-                                                    'Los significados psicológicos de los colores primarios en UI.',
-                                                    'Cómo crear paletas de colores accesibles según WCAG.',
-                                                    'El uso del color para guiar la atención del usuario (Jerarquía Visual).',
-                                                    'La regla del 60-30-10 para la distribución del color.'
-                                                ].map((item, i) => (
-                                                    <li key={i} className="flex items-start">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 mr-3 shrink-0" />
-                                                        <span>{item}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            <p className="mt-8 italic text-gray-400">
-                                                Prepárate para realizar ejercicios prácticos donde analizaremos aplicaciones populares y deconstruiremos sus decisiones cromáticas.
-                                            </p>
+                                            <div dangerouslySetInnerHTML={{ __html: activeLesson?.content || '<p>Sin descripción disponible.</p>' }} />
                                         </div>
                                     )}
 
@@ -381,7 +407,7 @@ export default function CoursePlayer() {
                                                         </p>
                                                     </div>
                                                     <Link
-                                                        to={`/courses/${id}/forum`}
+                                                        to={`/courses/${courseId}/forum`}
                                                         className="inline-flex items-center h-12 px-8 bg-primary text-white rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:bg-primary/90 transition-all group"
                                                     >
                                                         Ir al Foro de Discusión
@@ -441,7 +467,7 @@ export default function CoursePlayer() {
                                             <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=2574&auto=format&fit=crop" className="w-full h-full object-cover rounded-[14px]" alt="instructor" />
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black text-white">{course.instructor?.user?.name || 'Ana García'}</p>
+                                            <p className="text-xs font-black text-white">{course?.instructor?.user?.name || 'Ana García'}</p>
                                             <p className="text-[10px] font-medium text-gray-500">Senior Product Designer</p>
                                         </div>
                                     </div>

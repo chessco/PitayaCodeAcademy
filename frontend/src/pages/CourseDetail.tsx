@@ -93,8 +93,7 @@ export default function CourseDetail() {
 
                             <div className="flex flex-wrap gap-8 items-center text-[11px] font-bold text-gray-500 uppercase tracking-widest pt-4">
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-gray-600">Creado por</span>
-                                    <span className="text-primary hover:underline cursor-pointer">Juan Pérez</span>
+                                    <span className="text-primary hover:underline cursor-pointer">{course.instructor?.user?.name || 'Juan Pérez'}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <Clock className="w-4 h-4 text-gray-600" />
@@ -132,14 +131,14 @@ export default function CourseDetail() {
                         <section className="bg-white/[0.02] border border-white/5 p-8 lg:p-10 rounded-[2.5rem] shadow-xl">
                             <h3 className="text-2xl font-black tracking-tight mb-8">Lo que aprenderás</h3>
                             <div className="grid md:grid-cols-2 gap-y-5 gap-x-10">
-                                {[
+                                {(course.learningOutcomes ? JSON.parse(course.learningOutcomes) : [
                                     'Estrategias avanzadas de SEO on-page y off-page.',
                                     'Creación y optimización de campañas en Google Ads.',
                                     'Gestión profesional de Facebook e Instagram Ads.',
                                     'Email Marketing y automatización con Mailchimp.',
                                     'Analítica web con Google Analytics 4.',
                                     'Copywriting persuasivo para ventas.'
-                                ].map((item, i) => (
+                                ]).map((item: string, i: number) => (
                                     <div key={i} className="flex items-start space-x-3 group">
                                         <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" />
                                         <p className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors leading-relaxed">{item}</p>
@@ -162,26 +161,22 @@ export default function CourseDetail() {
                             </div>
 
                             <div className="space-y-3">
-                                {[
-                                    { id: 'sec1', title: 'Introducción al Marketing Digital', lessons: 5, time: '35min' },
-                                    { id: 'sec2', title: 'Estrategia SEO (Search Engine Optimization)', lessons: 12, time: '4h 20min' },
-                                    { id: 'sec3', title: 'Publicidad en Redes Sociales (Social Ads)', lessons: 8, time: '1h 45min' }
-                                ].map((sec) => (
-                                    <div key={sec.id} className="border border-white/5 rounded-2xl overflow-hidden bg-white/[0.01]">
+                                {course.modules && course.modules.map((module: any) => (
+                                    <div key={module.id} className="border border-white/5 rounded-2xl overflow-hidden bg-white/[0.01]">
                                         <button
-                                            onClick={() => toggleSection(sec.id)}
+                                            onClick={() => toggleSection(module.id)}
                                             className="w-full flex items-center justify-between p-6 hover:bg-white/[0.02] transition-colors"
                                         >
                                             <div className="flex items-center space-x-4">
-                                                {openSections.includes(sec.id) ? <ChevronUp className="w-4 h-4 text-gray-600" /> : <ChevronDown className="w-4 h-4 text-gray-600" />}
-                                                <span className="text-sm font-black text-white">{sec.title}</span>
+                                                {openSections.includes(module.id) ? <ChevronUp className="w-4 h-4 text-gray-600" /> : <ChevronDown className="w-4 h-4 text-gray-600" />}
+                                                <span className="text-sm font-black text-white">{module.title}</span>
                                             </div>
                                             <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
-                                                {sec.lessons} clases • {sec.time}
+                                                {module.lessons?.length || 0} clases • 15:00
                                             </div>
                                         </button>
                                         <AnimatePresence>
-                                            {openSections.includes(sec.id) && (
+                                            {openSections.includes(module.id) && (
                                                 <motion.div
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
@@ -189,8 +184,8 @@ export default function CourseDetail() {
                                                     className="overflow-hidden bg-[#09090b]/40 border-t border-white/5"
                                                 >
                                                     <div className="p-2">
-                                                        {(course.lessons || []).slice(0, 3).map((lesson: any, i: number) => (
-                                                            <div key={i} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                                        {module.lessons?.map((lesson: any) => (
+                                                            <div key={lesson.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
                                                                 <div className="flex items-center space-x-4">
                                                                     <Play className="w-3.5 h-3.5 text-gray-700 group-hover:text-primary" />
                                                                     <span className="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">{lesson.title}</span>
@@ -204,6 +199,47 @@ export default function CourseDetail() {
                                         </AnimatePresence>
                                     </div>
                                 ))}
+
+                                {/* Unassigned Lessons (General Section) */}
+                                {course.lessons && course.lessons.length > 0 && (
+                                    <div className="border border-white/5 rounded-2xl overflow-hidden bg-white/[0.01]">
+                                        <button
+                                            onClick={() => toggleSection('unassigned')}
+                                            className="w-full flex items-center justify-between p-6 hover:bg-white/[0.02] transition-colors"
+                                        >
+                                            <div className="flex items-center space-x-4">
+                                                {openSections.includes('unassigned') ? <ChevronUp className="w-4 h-4 text-gray-600" /> : <ChevronDown className="w-4 h-4 text-gray-600" />}
+                                                <span className="text-sm font-black text-white">General / Sin Sección</span>
+                                            </div>
+                                            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+                                                {course.lessons.length} clases • 15:00
+                                            </div>
+                                        </button>
+                                        <AnimatePresence>
+                                            {openSections.includes('unassigned') && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden bg-[#09090b]/40 border-t border-white/5"
+                                                >
+                                                    <div className="p-2">
+                                                        {course.lessons.map((lesson: any) => (
+                                                            <div key={lesson.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group">
+                                                                <div className="flex items-center space-x-4">
+                                                                    <Play className="w-3.5 h-3.5 text-gray-700 group-hover:text-primary" />
+                                                                    <span className="text-xs font-bold text-gray-400 group-hover:text-white transition-colors">{lesson.title}</span>
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">15:00</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+
                                 <button className="w-full py-4 text-[10px] font-black uppercase tracking-widest text-primary hover:text-white transition-colors">
                                     Mostrar todas las secciones
                                 </button>
@@ -232,9 +268,7 @@ export default function CourseDetail() {
                         <section className="space-y-6">
                             <h3 className="text-2xl font-black tracking-tight">Descripción</h3>
                             <div className="text-sm font-medium text-gray-400 leading-relaxed space-y-4">
-                                <p>Este curso completo de Marketing Digital está diseñado para llevarte desde los fundamentos hasta un nivel profesional avanzado. Aprenderás a dominar las herramientas más importantes del mercado actual.</p>
-                                <p>A través de ejemplos prácticos y proyectos reales, descubrirás cómo crear estrategias efectivas que generen resultados medibles. No importa si eres emprendedor, estudiante o profesional buscando actualizarse, este curso te dará las habilidades necesarias para triunfar en el entorno digital.</p>
-                                <p>Al finalizar el curso, serás capaz de planificar, ejecutar y optimizar campañas completas en múltiples canales, entender el comportamiento del usuario y maximizar el retorno de inversión (ROI).</p>
+                                <p>{course.description || "Sin descripción disponible."}</p>
                             </div>
                         </section>
 

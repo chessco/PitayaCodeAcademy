@@ -72,5 +72,6 @@ export class PrismaService implements OnModuleInit {
     get discussionTopic() { return this._client.discussionTopic; }
     get discussionPost() { return this._client.discussionPost; }
     get notification() { return this._client.notification; }
+    get lessonProgress() { return this._client.lessonProgress; }
     get $transaction() { return this._client.$transaction; }
 }

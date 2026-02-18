@@ -99,6 +99,7 @@ model Course {
   level        String?
   thumbnail    String?
   isPublished  Boolean @default(false)
+  learningOutcomes String? @db.Text // JSON list of outcomes
 
   tenant     Tenant           @relation(fields: [tenantId], references: [id]) // Virtual relation helper if needed, but tenantId is real
   instructor TenantMembership @relation("CourseInstructor", fields: [instructorId], references: [id])
@@ -132,6 +133,7 @@ model Lesson {
   module Module? @relation(fields: [moduleId], references: [id])
 
   resources CourseResource[]
+  progress  LessonProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,8 +177,22 @@ model Enrollment {
   student TenantMembership @relation(fields: [studentId], references: [id])
 
   createdAt DateTime @default(now())
+  lastAccessedAt DateTime @default(now())
+  completedLessons LessonProgress[]
 
   @@unique([courseId, studentId])
+}
+
+model LessonProgress {
+  id           String     @id @default(uuid())
+  enrollmentId String
+  lessonId     String
+  completedAt  DateTime   @default(now())
+
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
 }
 
 enum AccessType {

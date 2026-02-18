@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { EnrollmentService } from './enrollment.service';
@@ -17,5 +17,20 @@ export class EnrollmentController {
     @Get('course/:courseId')
     async getByCourse(@Param('courseId') courseId: string) {
         return this.enrollmentService.getStudentsByCourse(courseId);
+    }
+
+    @Post('course')
+    async enrollStudentByEmail(@Body() body: { email: string; courseId: string }, @Request() req: any) {
+        return this.enrollmentService.enrollByEmail(body.email, body.courseId, req.tenantMembership.tenantId);
+    }
+
+    @Get(':courseId/progress')
+    async getProgress(@Param('courseId') courseId: string, @Request() req: any) {
+        return this.enrollmentService.getProgress(req.tenantMembership.id, courseId);
+    }
+
+    @Post(':courseId/lessons/:lessonId/complete')
+    async completeLesson(@Param('courseId') courseId: string, @Param('lessonId') lessonId: string, @Request() req: any) {
+        return this.enrollmentService.markLessonComplete(req.tenantMembership.id, courseId, lessonId);
     }
 }

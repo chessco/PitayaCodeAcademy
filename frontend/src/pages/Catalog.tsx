@@ -128,7 +128,7 @@ export default function Catalog() {
                 animate="show"
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-20"
             >
-                {courses?.map((course: any) => (
+                {courses?.items?.map((course: any) => (
                     <motion.div key={course.id} variants={item}>
                         <div className="group flex flex-col h-full rounded-[2.8rem] bg-[#111113] border border-white/5 overflow-hidden hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
                             <Link

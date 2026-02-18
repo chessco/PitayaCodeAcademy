@@ -24,3 +24,9 @@ api/dist/
 # Editor
 .vscode/
 .idea/
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar

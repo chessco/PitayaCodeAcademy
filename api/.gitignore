@@ -1,5 +1,14 @@
 node_modules
 # Keep environment variables out of version control
 .env
+.env.*
 
 /generated/prisma
+
+# Callouts / Debug scripts
+debug-lessons.js
+test-login-http.js
+check-courses.ts
+check-public.ts
+debug-courses.ts
+gen_hash.js

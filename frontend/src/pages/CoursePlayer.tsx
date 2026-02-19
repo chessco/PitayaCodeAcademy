@@ -59,12 +59,26 @@ export default function CoursePlayer() {
     const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
     const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
 
-    // Set initial active lesson
+    // Set initial active lesson based on progress
     useEffect(() => {
-        if (!activeLessonId && allLessons.length > 0) {
-            setActiveLessonId(allLessons[0].id);
+        if (!activeLessonId && allLessons.length > 0 && progress) {
+            const completedIds = progress.completedLessonIds || [];
+            // Find the first lesson that is NOT completed
+            const firstUncompleted = allLessons.find((l: any) => !completedIds.includes(l.id));
+
+            if (firstUncompleted) {
+                setActiveLessonId(firstUncompleted.id);
+            } else {
+                // If all completed, maybe show the last one? Or just the first one. 
+                // Let's show the first one for now, or the user can navigate.
+                setActiveLessonId(allLessons[0].id);
+            }
+        } else if (!activeLessonId && allLessons.length > 0 && !isLoading) {
+            // Fallback if no progress loaded yet but course is loaded
+            // We might want to wait for progress, but if it fails, default to first.
+            // To avoid jumping, we should probably wait a bit or use a separate loading state for progress.
         }
-    }, [allLessons, activeLessonId]);
+    }, [allLessons, activeLessonId, progress, isLoading]);
 
 
     // Dynamic Progress

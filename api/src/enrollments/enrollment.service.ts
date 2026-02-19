@@ -50,7 +50,7 @@ export class EnrollmentService {
     }
 
     async getMyEnrollments(studentId: string) {
-        return this.prisma.enrollment.findMany({
+        const enrollments = await this.prisma.enrollment.findMany({
             where: { studentId },
             include: {
                 course: {
@@ -70,6 +70,17 @@ export class EnrollmentService {
             orderBy: {
                 lastAccessedAt: 'desc',
             },
+        });
+
+        return enrollments.map((enrollment: any) => {
+            const completedCount = enrollment.completedLessons?.length || 0;
+            const totalLessons = enrollment.course._count?.lessons || 0;
+            const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+            return {
+                ...enrollment,
+                progress
+            };
         });
     }
 

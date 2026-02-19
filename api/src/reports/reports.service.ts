@@ -105,7 +105,11 @@ export class ReportsService {
             include: {
                 order: {
                     include: {
-                        user: true
+                        student: {
+                            include: {
+                                user: true
+                            }
+                        }
                     }
                 }
             },
@@ -116,8 +120,8 @@ export class ReportsService {
         return items.map((item: any) => ({
             id: `TRX-${item.orderId.substring(0, 4)}`,
             student: {
-                name: item.order.user.name || 'Estudiante',
-                email: item.order.user.email
+                name: item.order.student.user.name || 'Estudiante',
+                email: item.order.student.user.email
             },
             course: courses.find((c: any) => c.id === item.courseId)?.title || 'Curso',
             date: format(item.order.createdAt, 'dd MMM, yyyy'),

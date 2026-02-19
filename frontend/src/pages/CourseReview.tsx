@@ -32,7 +32,7 @@ export default function CourseReview() {
             try {
                 const [courseRes, summaryRes, myReviewRes] = await Promise.all([
                     api.get(`/courses/${courseId}`),
-                    api.get(`/reviews/course/${courseId}`),
+                    api.get(`/reviews/summary/${courseId}`),
                     api.get(`/reviews/my/${courseId}`, { data: { studentId: user?.memberships?.[0]?.id } }).catch(() => ({ data: null }))
                 ]);
 
@@ -135,8 +135,8 @@ export default function CourseReview() {
                                         >
                                             <Star
                                                 className={`w-8 h-8 ${(hoverRating || rating) >= star
-                                                        ? 'fill-yellow-500 text-yellow-500'
-                                                        : 'text-gray-800'
+                                                    ? 'fill-yellow-500 text-yellow-500'
+                                                    : 'text-gray-800'
                                                     } transition-colors`}
                                             />
                                         </button>
@@ -176,8 +176,8 @@ export default function CourseReview() {
                                         key={tag}
                                         onClick={() => toggleTag(tag, selectedPros, setSelectedPros)}
                                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedPros.includes(tag)
-                                                ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                                                : 'bg-white/5 border-white/5 text-gray-600 hover:text-white'
+                                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                            : 'bg-white/5 border-white/5 text-gray-600 hover:text-white'
                                             }`}
                                     >
                                         {tag}
@@ -196,8 +196,8 @@ export default function CourseReview() {
                                         key={tag}
                                         onClick={() => toggleTag(tag, selectedContras, setSelectedContras)}
                                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${selectedContras.includes(tag)
-                                                ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                                                : 'bg-white/5 border-white/5 text-gray-600 hover:text-white'
+                                            ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                            : 'bg-white/5 border-white/5 text-gray-600 hover:text-white'
                                             }`}
                                     >
                                         {tag}
